@@ -62,24 +62,27 @@ Page({
 
     pointAtext.addEventListener(hmUI.event.CLICK_UP, (info) => {
       pointA++
-      if (!tieBreak) {
-        this.winPoint(pointA, "A", setNum)
-      }else {
+      if (superTB) {
+        this.playSuperTB("A")
+      }else if(tieBreak) {
         this.playTieBreak("A", setNum)
+      }else {
+        this.winPoint(pointA, "A", setNum)
       }
     })
     pointBtext.addEventListener(hmUI.event.CLICK_UP, (info) => {
       pointB++
-      if (!tieBreak) {
-        this.winPoint(pointB, "B", setNum, superTB)
+      if (superTB) {
+        this.playSuperTB("B")
+      }else if(tieBreak) {
+        this.playTieBreak("B", setNum)
       }else {
-        this.playTieBreak("B", setNum,)
+        this.winPoint(pointB, "B", setNum)
       }
     })
     resetButton.addEventListener(hmUI.event.CLICK_UP, (info) => {
       this.resetMatch()
     })
-    
   },
 
   winPoint(point, team, setN){
@@ -204,6 +207,7 @@ Page({
         this.changeSet(setNum)
         this.resetGame()
       }else if (gameA == 6 && gameB == 6) {
+        tieBreak = true
         this.resetPoints()
       }
 
@@ -260,9 +264,10 @@ Page({
         break
       case 3:
         if (setA != 2 && setB != 2) {
-          
+          this.createSuperTBDialog()
+
           set1Atext.setProperty(hmUI.prop.MORE, {
-            x: -40,
+              x: -40,
           })
           set1Btext.setProperty(hmUI.prop.MORE, {
             x: -40,
@@ -279,11 +284,15 @@ Page({
           set1BTBtext.setProperty(hmUI.prop.MORE, {
             x: -23,
           })
+          console.log("1111")
           set3Atext = hmUI.createWidget(hmUI.widget.TEXT, SET_3A_TEXT);
+          console.log("2222")
           set3Btext = hmUI.createWidget(hmUI.widget.TEXT, SET_3B_TEXT);
-          
+
         }else {
           //FIN DEL PARTIDO
+          pointAtext.removeEventListener(hmUI.event.CLICK_UP, listenerFunc)
+          pointBtext.removeEventListener(hmUI.event.CLICK_UP, listenerFunc)
         }
         break
     }
@@ -328,6 +337,11 @@ Page({
     deleteWidget(set2BTBtext)
     
     setNum = 1
+    setN = 1
+    setA = 0
+    setB = 0
+    tieBreak = false
+    superTB = false
   },
 
   playTieBreak(team, setN) {
@@ -360,12 +374,12 @@ Page({
             text: pointB,
           }) 
           break
-        case 3:
-          
-          break
         default:
           set1Atext.setProperty(hmUI.prop.MORE, {
             text: gameA,
+          })
+          set1BTBtext.setProperty(hmUI.prop.MORE, {
+            text: pointB,
           })
           break
       }
@@ -396,11 +410,13 @@ Page({
             text: pointA,
           }) 
           break
-        case 3:
-            
-          break
         default:
-  
+          set1Btext.setProperty(hmUI.prop.MORE, {
+            text: gameB,
+          })
+          set1ATBtext.setProperty(hmUI.prop.MORE, {
+            text: pointA,
+          }) 
           break
       }
       setNum++
@@ -412,17 +428,42 @@ Page({
 
   createSuperTBDialog() {
     const dialog = hmUI.createDialog({
-      title: '¿Tie-Break?',
+      title: '¿Super Tie-Break?',
       auto_hide: false,
       click_linster: ({ type }) => {
         dialog.show(false)
         if (type == 1) {
-          
+          superTB = true
+          this.resetPoints()
         }
       }
     })
 
     dialog.show(true)
+  },
+
+  playSuperTB(team) {
+    if (team == "A") {
+      pointAtext.setProperty(hmUI.prop.MORE, {
+        text: pointA,
+      })
+    }else {
+      pointBtext.setProperty(hmUI.prop.MORE, {
+        text: pointB,
+      })
+    }
+
+    if ((pointA >= 10 && pointA - pointB >= 2) || (pointB >= 10 && pointB - pointA >= 2)) {
+      set3Atext.setProperty(hmUI.prop.MORE, {
+        text: pointA,
+      })
+      set3Btext.setProperty(hmUI.prop.MORE, {
+        text: pointB,
+      })
+      //FIN DEL PARTIDO
+      pointAtext.removeEventListener(hmUI.event.CLICK_UP, listenerFunc)
+      pointBtext.removeEventListener(hmUI.event.CLICK_UP, listenerFunc)
+    }
   },
   
   createCanvas() {
@@ -504,7 +545,5 @@ Page({
       radius: 10,
       color: 0xffffff,
     })
-    
   },
-
 });

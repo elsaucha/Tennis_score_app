@@ -4,19 +4,6 @@ import { px } from "@zos/utils";
 
 export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 
-/*
-export const TEXT_A = {
-  text: "",
-  x: px(185),
-  y: px(20),
-  w: px(125),
-  h: px(30),
-  color: 0xffffff,
-  text_size: px(20),
-  align_h: hmUI.align.CENTER_H,
-  align_v: hmUI.align.TOP,
-};
-*/
 export const POINT_A_TEXT = {
   text: "0",
   x: px(137),
@@ -161,12 +148,28 @@ export const POINT_B_TEXT = {
   align_v: hmUI.align.BOTTOM,
 };
 
+export const BACK_BUTTON = {
+  text: "BACK",
+  x: px(155),
+  y: px(DEVICE_HEIGHT),
+  w: px(80),
+  h: px(40),
+  radius: px(10),
+  normal_color: 0xA5C2F1,
+  press_color: 0xe28559E,
+  text_size: px(20),
+  char_space: 2,
+  line_space: 4,
+  align_h: hmUI.align.CENTER_H,
+  align_v: hmUI.align.BOTTOM,
+};
+
 export const RESET_BUTTON = {
   text: "RESET",
   x: px(135),
-  y: px(DEVICE_HEIGHT),
+  y: px(DEVICE_HEIGHT + 50),
   w: px(120),
-  h: px(60),
+  h: px(50),
   radius: px(10),
   normal_color: 0xA5C2F1,
   press_color: 0xe28559E,

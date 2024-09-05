@@ -3,7 +3,7 @@ import { createWidget, widget, deleteWidget } from '@zos/ui'
 import { setWakeUpRelaunch } from '@zos/display'
 import { setStatusBarVisible } from '@zos/ui'
 import { log as Logger } from '@zos/utils'
-import { POINT_A_TEXT, SET_1A_TEXT, SET_2A_TEXT, SET_3A_TEXT, SET_1B_TEXT, SET_2B_TEXT, SET_3B_TEXT, POINT_B_TEXT, RESET_BUTTON, SET_1ATB_TEXT, SET_1BTB_TEXT, SET_2ATB_TEXT, SET_2BTB_TEXT }from './index.style'
+import { POINT_A_TEXT, SET_1A_TEXT, SET_2A_TEXT, SET_3A_TEXT, SET_1B_TEXT, SET_2B_TEXT, SET_3B_TEXT, POINT_B_TEXT, RESET_BUTTON, SET_1ATB_TEXT, SET_1BTB_TEXT, SET_2ATB_TEXT, SET_2BTB_TEXT, BACK_BUTTON }from './index.style'
 import { DEVICE_HEIGHT, DEVICE_WIDTH } from './index.style'
 import { px } from "@zos/utils";
 
@@ -18,6 +18,16 @@ const logger = Logger.getLogger("tennis_score_app");
   let setB = 0
   let tieBreak = false
   let superTB = false
+
+  let lastPointA = 0
+  let lastPointB = 0
+  let lastGameA = 0
+  let lastGameB = 0
+  let lastSetNum = 1
+  let lastSetA = 0
+  let lastSetB = 0
+  let lastTieBreak = false
+  let lastSuperTB = false
 
   let pointAtext = ""
   let pointBtext = ""
@@ -35,8 +45,11 @@ const logger = Logger.getLogger("tennis_score_app");
 
 Page({
   onInit() {
-    logger.debug("page onInit invoked");
-    
+    logger.debug("page onInit invoked");    
+  },
+
+  onDestroy() {
+    logger.debug("page onDestroy invoked");
   },
 
   build() {
@@ -59,33 +72,39 @@ Page({
     set2ATBtext = hmUI.createWidget(hmUI.widget.TEXT, SET_2ATB_TEXT);
     set2BTBtext = hmUI.createWidget(hmUI.widget.TEXT, SET_2BTB_TEXT);
     resetButton = hmUI.createWidget(hmUI.widget.BUTTON, RESET_BUTTON);
+    backButton = hmUI.createWidget(hmUI.widget.BUTTON, BACK_BUTTON);
 
     pointAtext.addEventListener(hmUI.event.CLICK_UP, (info) => {
+      this.saveData()
       pointA++
       if (superTB) {
         this.playSuperTB("A")
       }else if(tieBreak) {
         this.playTieBreak("A", setNum)
       }else {
-        this.winPoint(pointA, "A", setNum)
+        this.checkPoint(pointA, "A", setNum)
       }
     })
     pointBtext.addEventListener(hmUI.event.CLICK_UP, (info) => {
+      this.saveData()
       pointB++
       if (superTB) {
         this.playSuperTB("B")
       }else if(tieBreak) {
         this.playTieBreak("B", setNum)
       }else {
-        this.winPoint(pointB, "B", setNum)
+        this.checkPoint(pointB, "B", setNum)
       }
     })
     resetButton.addEventListener(hmUI.event.CLICK_UP, (info) => {
       this.resetMatch()
     })
+    backButton.addEventListener(hmUI.event.CLICK_UP, (info) => {
+      this.returnData()
+    })
   },
 
-  winPoint(point, team, setN){
+  checkPoint(point, team, setN){
     if (team == "A") {
       switch (point) {
         case 1:
@@ -115,13 +134,15 @@ Page({
               text: "40"
             })
           }else {
+            gameA++
             this.checkSet(setN, team)                     
             this.resetPoints()
           }
           break
         case 5:
-            this.checkSet(setN, team)
-            this.resetPoints()
+          gameA++
+          this.checkSet(setN, team)
+          this.resetPoints()
           break
         default:
           pointAtext.setProperty(hmUI.prop.MORE, {
@@ -157,11 +178,13 @@ Page({
               text: "40"
             })
           }else {
+            gameB++
             this.checkSet(setN, team)  
             this.resetPoints()
           }
           break
         case 5:
+          gameB++
           this.checkSet(setN, team)
           this.resetPoints()
           break
@@ -176,8 +199,6 @@ Page({
 
   checkSet(setN, team){
     if (team == "A") {
-      gameA++
-  
       switch (setN) {
         case 1: 
           set1Atext.setProperty(hmUI.prop.MORE, {
@@ -212,8 +233,6 @@ Page({
       }
 
     }else {
-      gameB++
-  
       switch (setN) {
         case 1: 
           set1Btext.setProperty(hmUI.prop.MORE, {
@@ -465,6 +484,56 @@ Page({
       pointBtext.removeEventListener(hmUI.event.CLICK_UP, listenerFunc)
     }
   },
+
+  saveData() {
+    lastPointA = pointA
+    lastPointB = pointB
+    lastGameA = gameA
+    lastGameB = gameB
+    lastSetNum = setNum
+    lastSetA = setA
+    lastSetB = setB
+    lastTieBreak = tieBreak
+    lastSuperTB = superTB
+  },
+
+  returnData() {
+    if (setNum == 2 && gameA == 0 && gameB == 0 && pointA == 0 && pointB == 0) {
+      deleteWidget(set2Atext)
+      deleteWidget(set2Btext)
+      
+    }else if (setNum == 3 && gameA == 0 && gameB == 0 && pointA == 0 && pointB == 0) {
+      deleteWidget(set3Atext)
+      deleteWidget(set3Btext)
+    }
+
+    pointA = lastPointA
+    pointB = lastPointB
+    gameA = lastGameA
+    gameB = lastGameB
+    setNum = lastSetNum
+    setA = lastSetA
+    setB = lastSetB
+    tieBreak = lastTieBreak
+    superTB = lastSuperTB
+
+    if (superTB) {
+      this.playSuperTB("A")
+    }else if(tieBreak) {
+      this.playTieBreak("A", setNum)
+    }else {
+      this.checkPoint(pointA, "A", setNum)
+    }
+    if (superTB) {
+      this.playSuperTB("B")
+    }else if(tieBreak) {
+      this.playTieBreak("B", setNum)
+    }else {
+      this.checkPoint(pointA, "B", setNum)
+    }
+    this.checkSet(setNum, "A")
+    this.checkSet(setNum, "B")
+  },
   
   createCanvas() {
     //fondo
@@ -472,7 +541,7 @@ Page({
       x: 0,
       y: 0,
       w: DEVICE_WIDTH,
-      h: DEVICE_HEIGHT + 70,
+      h: DEVICE_HEIGHT + 130,
       radius: px(10),
       color: 0x3569BD,
     })
